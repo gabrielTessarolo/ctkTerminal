@@ -25,31 +25,33 @@ class CtkTerminal:
 
     @staticmethod
     def recognizeColors(text):
-        splitted_text = re.split(r'\033\[(\d+;\d+)*m', text)
-        identifiedColors = re.findall(r'\033\[(\d+;\d+)*m', text)
+        splitted_text = [x for x in re.sub(r'\033\[([\d;]*)m', r'\\COLOR\\', text).split("\\COLOR\\") if x]
+        identifiedColors = re.findall(r'\033\[([\d;]*)m', text)
         print("Identified Colors:", identifiedColors)
         print("Splitted Text:", splitted_text)
         segments = [[part, identifiedColors[c]] for c, part in enumerate(splitted_text) if part]
 
         finalLine = []
         for i in segments:
-            if i[1] == "31" or i[1] == "91":
+            colorID = i[1][-2:]
+            if colorID == "31" or colorID == "91":
                 finalLine.append([i[0], "red"])
-            elif i[1] == "32" or i[1] == "92":
+            elif colorID == "32" or colorID == "92":
                 finalLine.append([i[0], "green"])
-            elif i[1] == "33" or i[1] == "93":
+            elif colorID == "33" or colorID == "93":
                 finalLine.append([i[0], "yellow"])
-            elif i[1] == "34" or i[1] == "94":
+            elif colorID == "34" or colorID == "94":
                 finalLine.append([i[0], "blue"])
-            elif i[1] == "35" or i[1] == "95":
+            elif colorID == "35" or colorID == "95":
                 finalLine.append([i[0], "purple"])
-            elif i[1] == "36" or i[1] == "96":
+            elif colorID == "36" or colorID == "96":
                 finalLine.append([i[0], "cyan"])
-            elif i[1] == "37" or i[1] == "97":
+            elif colorID == "37" or colorID == "97":
                 finalLine.append([i[0], "white"])
         
         return finalLine
 
+    # AQUI TA DANDO ERRADO HEIN, SÓ DEFINE FONTE E TAMANHO DIRETO NA TEXTBOX
     def addText(self, text, font="Courier", size=12, style="normal"):
         recognizedText = self.recognizeColors(text)
         for i in recognizedText:
