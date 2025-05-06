@@ -5,7 +5,7 @@ import re
 class CtkTerminal:
     def __init__(self, root=None, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="black", bg_color="white"):
         self.master = root if root else ctk.CTk()
-        self.textbox = ctk.CTkTextbox(self.master, width=width, height=height, text_color=text_color, bg_color=bg_color)
+        self.textbox = ctk.CTkTextbox(self.master, width=width, height=height, text_color=text_color, fg_color=bg_color)
         
         self.line_span = line_span
         self.column_span = column_span
@@ -13,9 +13,10 @@ class CtkTerminal:
         self.size = size
         self.text_color = text_color
         self.bg_color = bg_color
-
+        
         # Configura as cores a serem adicionadas
         self.colors = {
+            30: {"name": "black",           "hex": "#000000"},
             31: {"name": "red",             "hex": "#FF0000"},
             32: {"name": "green",           "hex": "#00FF00"},
             33: {"name": "yellow",          "hex": "#FFFF00"},
@@ -131,7 +132,7 @@ class CtkTerminal:
     
 if __name__ == "__main__":
     root = ctk.CTk()
-    terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="black")
+    terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="blue")
     terminal.textbox.pack()
-    terminal.addText("\033[1;49mHello World!\033[m\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", font='Arial', justify='center')
+    terminal.addText("\033[1;49mHello World!\033[m\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial', justify='center')
     root.mainloop()
