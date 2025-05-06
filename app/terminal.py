@@ -14,40 +14,48 @@ class CtkTerminal:
         self.text_color = text_color
         self.bg_color = bg_color
 
-        # Configura as cores a serem adicinadas
+        # Configura as cores a serem adicionadas
         self.colors = {
-            31: {"name": "red", "hex": "#FF0000"},
-            32: {"name": "green", "hex": "#00FF00"},
-            33: {"name": "yellow", "hex": "#FFFF00"},
-            34: {"name": "blue", "hex": "#0000FF"},
-            35: {"name": "purple", "hex": "#800080"},
-            36: {"name": "cyan", "hex": "#00FFFF"},
-            37: {"name": "white", "hex": "#FFFFFF"},
-            38: {"name": "dark_blue", "hex": "#00008B"},
-            39: {"name": "orange", "hex": "#FFA500"},
-            40: {"name": "gold", "hex": "#FFD700"},
-            41: {"name": "dark_red", "hex": "#8B0000"},
-            42: {"name": "dark_green", "hex": "#006400"},
-            43: {"name": "gray", "hex": "#808080"},
-            44: {"name": "dark_gray", "hex": "#A9A9A9"},
-            45: {"name": "light_gray", "hex": "#D3D3D3"},
-            46: {"name": "dark_purple", "hex": "#4B0082"},
-            47: {"name": "teal", "hex": "#008080"},
-            48: {"name": "pink", "hex": "#FFC0CB"},
-            49: {"name": "lime", "hex": "#00FF40"},
-            50: {"name": "beige", "hex": "#F5F5DC"},
+            31: {"name": "red",             "hex": "#FF0000"},
+            32: {"name": "green",           "hex": "#00FF00"},
+            33: {"name": "yellow",          "hex": "#FFFF00"},
+            34: {"name": "blue",            "hex": "#0000FF"},
+            35: {"name": "purple",          "hex": "#800080"},
+            36: {"name": "cyan",            "hex": "#00FFFF"},
+            37: {"name": "white",           "hex": "#FFFFFF"},
+            38: {"name": "dark_blue",       "hex": "#00008B"},
+            39: {"name": "orange",          "hex": "#FFA500"},
+            40: {"name": "gold",            "hex": "#FFD700"},
+            41: {"name": "dark_red",        "hex": "#8B0000"},
+            42: {"name": "dark_green",      "hex": "#006400"},
+            43: {"name": "gray",            "hex": "#808080"},
+            44: {"name": "dark_gray",       "hex": "#A9A9A9"},
+            45: {"name": "light_gray",      "hex": "#D3D3D3"},
+            46: {"name": "dark_purple",     "hex": "#4B0082"},
+            47: {"name": "teal",            "hex": "#008080"},
+            48: {"name": "pink",            "hex": "#FFC0CB"},
+            49: {"name": "lime",            "hex": "#00FF40"},
+            50: {"name": "beige",           "hex": "#F5F5DC"},
         }
+        
         
         # Configura a tag das cores
         for i in self.colors.keys():
             color = self.colors[i]
             self.textbox.tag_config(color["name"], foreground=color["hex"])
 
+        # Configurações de alinhamento
+        self.textbox.tag_config("left", justify="left")
+        self.textbox.tag_config("center", justify="center")
+        self.textbox.tag_config("right", justify="right")
+
     def recognizeColors(self, text):
         splitted_text = [x for x in re.sub(r'\033\[([\d;]*)m', r'\\FORMAT\\', text).split("\\FORMAT\\") if x]
-        identifiedColors = re.findall(r'\033\[([\d;]*)m', text)
-        print("Identified Colors:", identifiedColors)
-        print("Splitted Text:", splitted_text)
+        
+        # Evita que dois ou mais códigos ANSI sejam aplicados em sequência
+        filteredText = re.sub(r'(\033\[[\d;]*m)(?=\033\[[\d;]*m)', '', text)
+        identifiedColors = re.findall(r'\033\[([\d;]*)m', filteredText)
+    
         segments = [[part, identifiedColors[c]] for c, part in enumerate(splitted_text) if part]
 
         finalLine = []
@@ -79,7 +87,7 @@ class CtkTerminal:
         return finalLine
 
     # Função para adicionar uma linha de texto formatada em ANSI ao terminal
-    def addText(self, text, font="Courier", size=12, style="normal", color="auto"):
+    def addText(self, text, font="Courier", size=12, style="normal", color="auto", justify="left"):
         fontFormat = ctk.CTkFont()
 
         # Define fonte e tamanho customizados. Se der erro ou for igual, usa o padrão
@@ -97,7 +105,6 @@ class CtkTerminal:
             style = segment[1]["style"]
             textPart = segment[0]
 
-            print(f"\033[1;35m{style}, {type(style)}, {"bold" in style}\033[m")
             segFont = ctk.CTkFont(fontFormat.cget("family"), fontFormat.cget("size"),
                 weight="bold" if "bold" in style else "normal",
                 slant="italic" if "italic" in style else "roman",
@@ -111,12 +118,20 @@ class CtkTerminal:
             except:
                 self.textbox.tag_config(tag_name, cnf={"font": segFont})    
                 
-            print(f"Adding text: {textPart} with font: {segFont.cget('weight')} and color: {color} and style: {style}")
-            self.textbox.insert("end", textPart, tags=(tag_name, segColor))
+            self.textbox.insert("end", textPart, tags=(tag_name, segColor, justify))
             
+    def clear(self, line=0, line_span=1):
+        if line == 0:
+            self.textbox.delete("1.0", "end")
+        else:
+            try:        
+                self.textbox.delete(f"{line}.0", f"{line+line_span}.0")      
+            except:
+                self.textbox.delete(f"{line}.0", "end")
+    
 if __name__ == "__main__":
     root = ctk.CTk()
-    terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=500, font="Courier", size=30, text_color="black", bg_color="black")
+    terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="black")
     terminal.textbox.pack()
-    terminal.addText("\033[1;49mHello World!\033[m\n\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", font='Arial')
+    terminal.addText("\033[1;49mHello World!\033[m\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", font='Arial', justify='center')
     root.mainloop()
