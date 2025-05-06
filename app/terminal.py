@@ -86,8 +86,7 @@ class CtkTerminal:
 
         # Define fonte e tamanho customizados. Se der erro ou for igual, usa o padrão
         try:
-            if not (font == self.font and size == self.size):
-                fontFormat.configure(family=font, size=size)
+            fontFormat.configure(family=font, size=size)
         except:
             fontFormat.configure(family=self.font, size=self.size)
             
@@ -97,23 +96,26 @@ class CtkTerminal:
             style = segment[1]["style"]
             textPart = segment[0]
 
-            print(f"\033[1;35m{style}\033[m")
-            segFont = fontFormat
-            if "bold" in style:
-                segFont.configure(weight="bold")
-            if "italic" in style:
-                segFont.configure(slant="italic")
-            if "underline" in style:
-                segFont.configure(underline=True)
+            print(f"\033[1;35m{style}, {type(style)}, {"bold" in style}\033[m")
+            segFont = ctk.CTkFont(fontFormat.cget("family"), fontFormat.cget("size"),
+                weight="bold" if "bold" in style else "normal",
+                slant="italic" if "italic" in style else "roman",
+                underline=True if "underline" in style else False
+            )
 
-            self.textbox.tag_config("actFont", cnf={"font": segFont})
-
+            tag_name = f"font_{id(segFont)}"
+            try:
+                if not self.textbox.tag_cget(tag_name, "font"):
+                    self.textbox.tag_config(tag_name, cnf={"font": segFont})
+            except:
+                self.textbox.tag_config(tag_name, cnf={"font": segFont})    
+                
             print(f"Adding text: {textPart} with font: {segFont.cget('weight')} and color: {color} and style: {style}")
-            self.textbox.insert("end", textPart, tags=("actFont", color))
+            self.textbox.insert("end", textPart, tags=(tag_name, color))
             
 if __name__ == "__main__":
     root = ctk.CTk()
     terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=500, font="Courier", size=30, text_color="black", bg_color="black")
     terminal.textbox.pack()
-    terminal.addText("\033[1;32mHello World!\033[m\n\033[1;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial')
+    terminal.addText("\033[1;32mHello World!\033[m\n\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", font='Impact')
     root.mainloop()
