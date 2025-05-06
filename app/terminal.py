@@ -15,24 +15,33 @@ class CtkTerminal:
         self.bg_color = bg_color
 
         # Configura as cores a serem adicinadas
-        self.textbox.tag_config("red", foreground="#FF0000")
-        self.textbox.tag_config("green", foreground="#00FF00")
-        self.textbox.tag_config("blue", foreground="#0000FF")
-        self.textbox.tag_config("yellow", foreground="#FFFF00")
-        self.textbox.tag_config("white", foreground="#FFFFFF")
-        self.textbox.tag_config("black", foreground="#000000")
-        self.textbox.tag_config("purple", foreground="#FF00FF")
-        self.textbox.tag_config("cyan", foreground="#00FFFF")
-
-        boldFont = ctk.CTkFont(self.font, self.size, weight="bold")
-        italicFont = ctk.CTkFont(self.font, self.size, slant="italic")
-        underlineFont = ctk.CTkFont(self.font, self.size, underline=True)
-
-        # Mais tags úteis
-        # Tags de estilo
-        self.textbox.tag_config("bold", cnf={"font": boldFont})
-        self.textbox.tag_config("italic", cnf={"font": italicFont})
-        self.textbox.tag_config("underline", cnf={"font": underlineFont})
+        self.colors = {
+            31: {"name": "red", "hex": "#FF0000"},
+            32: {"name": "green", "hex": "#00FF00"},
+            33: {"name": "yellow", "hex": "#FFFF00"},
+            34: {"name": "blue", "hex": "#0000FF"},
+            35: {"name": "purple", "hex": "#800080"},
+            36: {"name": "cyan", "hex": "#00FFFF"},
+            37: {"name": "white", "hex": "#FFFFFF"},
+            38: {"name": "dark_blue", "hex": "#00008B"},
+            39: {"name": "orange", "hex": "#FFA500"},
+            40: {"name": "gold", "hex": "#FFD700"},
+            41: {"name": "dark_red", "hex": "#8B0000"},
+            42: {"name": "dark_green", "hex": "#006400"},
+            43: {"name": "gray", "hex": "#808080"},
+            44: {"name": "dark_gray", "hex": "#A9A9A9"},
+            45: {"name": "light_gray", "hex": "#D3D3D3"},
+            46: {"name": "dark_purple", "hex": "#4B0082"},
+            47: {"name": "teal", "hex": "#008080"},
+            48: {"name": "pink", "hex": "#FFC0CB"},
+            49: {"name": "lime", "hex": "#00FF40"},
+            50: {"name": "beige", "hex": "#F5F5DC"},
+        }
+        
+        # Configura a tag das cores
+        for i in self.colors.keys():
+            color = self.colors[i]
+            self.textbox.tag_config(color["name"], foreground=color["hex"])
 
     def recognizeColors(self, text):
         splitted_text = [x for x in re.sub(r'\033\[([\d;]*)m', r'\\FORMAT\\', text).split("\\FORMAT\\") if x]
@@ -59,29 +68,18 @@ class CtkTerminal:
                 else:
                     pass
 
-            colorID = i[1].split(';')[-1]
-            if colorID == "31" or colorID == "91":
-                segFormat["color"] = "red"
-            elif colorID == "32" or colorID == "92":
-                segFormat["color"] = "green"
-            elif colorID == "33" or colorID == "93":
-                segFormat["color"] = "yellow"
-            elif colorID == "34" or colorID == "94":
-                segFormat["color"] = "blue"
-            elif colorID == "35" or colorID == "95":
-                segFormat["color"] = "purple"
-            elif colorID == "36" or colorID == "96":
-                segFormat["color"] = "cyan"
-            elif colorID == "37" or colorID == "97":
-                segFormat["color"] = "white"
-            else:
-                segFormat["color"] = "black"
-
+            try:
+                colorID = int(i[1].split(';')[-1])
+            except:
+                colorID = 30
+            segFormat["color"] = self.colors[colorID]["name"] if colorID in self.colors.keys() else "black"
+            
             finalLine.append([i[0], segFormat])
 
         return finalLine
 
-    def addText(self, text, font="Courier", size=12, style="normal"):
+    # Função para adicionar uma linha de texto formatada em ANSI ao terminal
+    def addText(self, text, font="Courier", size=12, style="normal", color="auto"):
         fontFormat = ctk.CTkFont()
 
         # Define fonte e tamanho customizados. Se der erro ou for igual, usa o padrão
@@ -92,7 +90,10 @@ class CtkTerminal:
             
         recognizedText = self.recognizeColors(text)
         for segment in recognizedText:
-            color = segment[1]["color"]
+            if color == "auto":
+                segColor = segment[1]["color"]
+            else:
+                segColor = color
             style = segment[1]["style"]
             textPart = segment[0]
 
@@ -111,11 +112,11 @@ class CtkTerminal:
                 self.textbox.tag_config(tag_name, cnf={"font": segFont})    
                 
             print(f"Adding text: {textPart} with font: {segFont.cget('weight')} and color: {color} and style: {style}")
-            self.textbox.insert("end", textPart, tags=(tag_name, color))
+            self.textbox.insert("end", textPart, tags=(tag_name, segColor))
             
 if __name__ == "__main__":
     root = ctk.CTk()
     terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=500, font="Courier", size=30, text_color="black", bg_color="black")
     terminal.textbox.pack()
-    terminal.addText("\033[1;32mHello World!\033[m\n\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", font='Impact')
+    terminal.addText("\033[1;49mHello World!\033[m\n\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", font='Arial')
     root.mainloop()
