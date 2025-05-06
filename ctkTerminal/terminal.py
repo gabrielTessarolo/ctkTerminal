@@ -2,11 +2,12 @@ import customtkinter as ctk
 import tkinter as tk
 import re
 
-class CtkTerminal:
-    def __init__(self, root=None, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="black", bg_color="white"):
+class CTkTerminal:
+    def __init__(self, root=None, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="white", bg_color="gray12"):
         self.master = root if root else ctk.CTk()
         self.textbox = ctk.CTkTextbox(self.master, width=width, height=height, text_color=text_color, fg_color=bg_color)
-        
+        self.textbox.configure(state="disabled")
+
         self.line_span = line_span
         self.column_span = column_span
         self.font = font
@@ -57,7 +58,9 @@ class CtkTerminal:
         filteredText = re.sub(r'(\033\[[\d;]*m)(?=\033\[[\d;]*m)', '', text)
         identifiedColors = re.findall(r'\033\[([\d;]*)m', filteredText)
     
-        segments = [[part, identifiedColors[c]] for c, part in enumerate(splitted_text) if part]
+        if identifiedColors == []:
+            return [[text, {}]]
+        segments = [[part, identifiedColors[c]] for c, part in enumerate(splitted_text)]
 
         finalLine = []
 
@@ -88,7 +91,7 @@ class CtkTerminal:
         return finalLine
 
     # Função para adicionar uma linha de texto formatada em ANSI ao terminal
-    def addText(self, text, font="Courier", size=12, style="normal", color="auto", justify="left"):
+    def addText(self, text, font="Courier", size=12, style="auto", color="auto", justify="left"):
         fontFormat = ctk.CTkFont()
 
         # Define fonte e tamanho customizados. Se der erro ou for igual, usa o padrão
@@ -99,17 +102,25 @@ class CtkTerminal:
             
         recognizedText = self.recognizeColors(text)
         for segment in recognizedText:
-            if color == "auto":
-                segColor = segment[1]["color"]
-            else:
-                segColor = color
-            style = segment[1]["style"]
+            try:
+                if color == "auto":
+                    segColor = segment[1]["color"]
+                else:
+                    segColor = color
+                if style == "auto":
+                    segStyle = segment[1]["style"]
+                else:
+                    segStyle = [x for x in style.split(" ") if x in ["bold", "italic", "underline"]]
+            except:
+                segColor = "black" if color=="auto" else color
+                segStyle = "normal" if style=="auto" else style
+
             textPart = segment[0]
 
             segFont = ctk.CTkFont(fontFormat.cget("family"), fontFormat.cget("size"),
-                weight="bold" if "bold" in style else "normal",
-                slant="italic" if "italic" in style else "roman",
-                underline=True if "underline" in style else False
+                weight="bold" if "bold" in segStyle else "normal",
+                slant="italic" if "italic" in segStyle else "roman",
+                underline=True if "underline" in segStyle else False
             )
 
             tag_name = f"font_{id(segFont)}"
@@ -118,9 +129,11 @@ class CtkTerminal:
                     self.textbox.tag_config(tag_name, cnf={"font": segFont})
             except:
                 self.textbox.tag_config(tag_name, cnf={"font": segFont})    
-                
-            self.textbox.insert("end", textPart, tags=(tag_name, segColor, justify))
             
+            self.textbox.configure(state="normal")
+            self.textbox.insert("end", textPart, tags=(tag_name, segColor, justify))
+            self.textbox.configure(state="disabled")    
+
     def clear(self, line=0, line_span=1):
         if line == 0:
             self.textbox.delete("1.0", "end")
@@ -132,7 +145,8 @@ class CtkTerminal:
     
 if __name__ == "__main__":
     root = ctk.CTk()
-    terminal = CtkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="blue")
+    terminal = CTkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="gray12")
     terminal.textbox.pack()
-    terminal.addText("\033[1;49mHello World!\033[m\033[13;31mThis is a test.\033[m\n\033[4;34mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial', justify='center')
+    terminal.addText("\033[1;49mHello World!\033[m\033[13;47mThis is a test.\033[m\n\033[4;48mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial', justify='center')
+    terminal.addText("\nMy Terminal is cool", size=20, font='Impact', justify='right', color="blue")
     root.mainloop()
