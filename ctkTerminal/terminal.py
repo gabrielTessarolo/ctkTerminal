@@ -167,19 +167,3 @@ class TerminalRedirector:
     # Para fins de compatbilidade
     def flush(self):
         pass
-    
-if __name__ == "__main__":
-    root = ctk.CTk()
-    terminal = CTkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="gray12")
-    # terminal.addText("\033[1;49mHello World!\033[m\033[13;47mThis is a test.\033[m\n\033[4;48mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial', justify='center')
-    # terminal.addText("\nMy Terminal is cool", size=20, font='Impact', justify='right', color="blue")
-    
-    widget = CTkTerminal(root)
-    widget.textbox.pack()
-
-    redirector = TerminalRedirector(widget)
-    print("\033[14;40mMy terminal is so cool\033[m") # Printed inside your terminal/widget
-    redirector.deactivate()
-    print("\033[14;36mMeu terminal é muito legal\033[m") # Printed inside
-    
-    root.mainloop()
