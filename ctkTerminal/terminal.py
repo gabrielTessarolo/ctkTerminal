@@ -51,22 +51,24 @@ class CTkTerminal:
         self.textbox.tag_config("right", justify="right")
 
     def recognizeColors(self, text):
+        text = '\033[m' + text + '\033[m'
         splitted_text = [x for x in re.sub(r'\033\[([\d;]*)m', r'\\FORMAT\\', text).split("\\FORMAT\\") if x]
         
         # Evita que dois ou mais códigos ANSI sejam aplicados em sequência
         filteredText = re.sub(r'(\033\[[\d;]*m)(?=\033\[[\d;]*m)', '', text)
         identifiedColors = re.findall(r'\033\[([\d;]*)m', filteredText)
-    
+            
         if identifiedColors == []:
             return [[text, {}]]
-        segments = [[part, identifiedColors[c]] for c, part in enumerate(splitted_text)]
+        segments = [[part, identifiedColors[c]] if c < len(identifiedColors) else [part, '0;'] for c, part in enumerate(splitted_text)]
 
         finalLine = []
 
         for i in segments:
             segFormat = {'style': [], 'color': ''}
-            if i[1]=='' or i[1]=='\n': 
+            if i[1]=='' or i[0]=='\n': 
                 finalLine.append([i[0], segFormat])
+                continue
             
             if ';' in i[1]:
                 styleID = i[1].split(';')[0]
@@ -82,8 +84,8 @@ class CTkTerminal:
             try:
                 colorID = int(i[1].split(';')[-1])
             except:
-                colorID = 30
-            segFormat["color"] = self.colors[colorID]["name"] if colorID in self.colors.keys() else "black"
+                colorID = None
+            segFormat["color"] = self.colors[colorID]["name"] if colorID in self.colors.keys() else self.text_color
             
             finalLine.append([i[0], segFormat])
 
@@ -111,7 +113,7 @@ class CTkTerminal:
                 else:
                     segStyle = [x for x in style.split(" ") if x in ["bold", "italic", "underline"]]
             except:
-                segColor = "black" if color=="auto" else color
+                segColor = self.text_color if color=="auto" else color
                 segStyle = "normal" if style=="auto" else style
 
             textPart = segment[0]
@@ -131,6 +133,7 @@ class CTkTerminal:
             
             self.textbox.configure(state="normal")
             self.textbox.insert("end", textPart, tags=(tag_name, segColor, justify))
+            self.textbox.see("end")
             self.textbox.configure(state="disabled")    
 
     def clear(self, line=0, line_span=1):
