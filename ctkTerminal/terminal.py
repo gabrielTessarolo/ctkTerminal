@@ -1,10 +1,10 @@
 import customtkinter as ctk
-import tkinter as tk
+import sys
 import re
 
 class CTkTerminal:
-    def __init__(self, root=None, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="white", bg_color="gray12"):
-        self.master = root if root else ctk.CTk()
+    def __init__(self, root: ctk.CTk, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="white", bg_color="gray12"):
+        self.master = root
         self.textbox = ctk.CTkTextbox(self.master, width=width, height=height, text_color=text_color, fg_color=bg_color)
         self.textbox.configure(state="disabled")
 
@@ -39,7 +39,6 @@ class CTkTerminal:
             49: {"name": "lime",            "hex": "#00FF40"},
             50: {"name": "beige",           "hex": "#F5F5DC"},
         }
-        
         
         # Configura a tag das cores
         for i in self.colors.keys():
@@ -142,11 +141,45 @@ class CTkTerminal:
                 self.textbox.delete(f"{line}.0", f"{line+line_span}.0")      
             except:
                 self.textbox.delete(f"{line}.0", "end")
+                
+# Redirecionamento do terminal, portanto, o texto será formatado automaticamente e não via parâmetros
+class TerminalRedirector:
+    def __init__(self, widget, original_stdout=sys.stdout):
+        self.terminal = widget
+        self.original_stdout = original_stdout
+        sys.stdout = self
+    
+    # write específico para o CTkTerminal. Se não for uma instância, tenta escrever com insert
+    def write(self, message):
+        if isinstance(self.terminal, CTkTerminal):
+            self.terminal.addText(message, color="auto", style="auto")
+        else:
+            try:
+                self.terminal.insert("end", message)
+            except Exception as e:
+                # Print no stdout original se falhar
+                self.original_stdout.write(f"Error: {e}\n")
+    
+    # Volta o stdout do sistema para o original
+    def deactivate(self):
+        sys.stdout = self.original_stdout
+            
+    # Para fins de compatbilidade
+    def flush(self):
+        pass
     
 if __name__ == "__main__":
     root = ctk.CTk()
     terminal = CTkTerminal(root=root, line_span=5, column_span=1, width=500, height=100, font="Courier", size=30, text_color="black", bg_color="gray12")
-    terminal.textbox.pack()
-    terminal.addText("\033[1;49mHello World!\033[m\033[13;47mThis is a test.\033[m\n\033[4;48mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial', justify='center')
-    terminal.addText("\nMy Terminal is cool", size=20, font='Impact', justify='right', color="blue")
+    # terminal.addText("\033[1;49mHello World!\033[m\033[13;47mThis is a test.\033[m\n\033[4;48mThis is underlined.\033[m\n\033[3;35mThis is italic.\033[m\n\033[1;33mThis is bold.\033[m\n\033[0;36mThis is normal.\033[m", size=20, font='Arial', justify='center')
+    # terminal.addText("\nMy Terminal is cool", size=20, font='Impact', justify='right', color="blue")
+    
+    widget = CTkTerminal(root)
+    widget.textbox.pack()
+
+    redirector = TerminalRedirector(widget)
+    print("\033[14;40mMy terminal is so cool\033[m") # Printed inside your terminal/widget
+    redirector.deactivate()
+    print("\033[14;36mMeu terminal é muito legal\033[m") # Printed inside
+    
     root.mainloop()

@@ -21,7 +21,8 @@ Its main purpose is to make it easy to insert to a custom CTkTextbox various col
 
 ```py
 class CTkTerminal(
-    root: Any | None = None,
+    self: Self@CTkTerminal,
+    root:           ctk.Ctk,
     line_span:      int = 5,
     column_span:    int = 1,
     width:          int = 100,
@@ -30,10 +31,33 @@ class CTkTerminal(
     size:           int = 12,
     text_color:     str = "white",
     bg_color:       str = "gray12"
+
+    # Adds the formatted text to your terminal
+    (method) def addText(
+        text: Any,
+        style: str = "auto",
+        color: str = "auto",
+        font: str = "Courier",
+        size: int = 12,
+        justify: str = "left"
+    ) -> None
+
+    # Clears terminal lines, from line to line+line_span
+    (method) def clear(
+        self: Self@CTkTerminal,
+        line: int,
+        line_span: int
+    ) -> None
+
+    # Called by addText, returns a list filtered with each segment of the text and its formatting
+    (method) def recognizeColors(
+        self: Self@CTkTerminal,
+        text: Any
+    ) -> (list[list] | list)
 ) 
 ```
 
-When an instance of CTkTerminal is initialized, it creates an instance of CTkTextbox and assigns the custom values passeds to it.
+When an instance of CTkTerminal is initialized, it creates an instance of CTkTextbox and assigns the custom values passeds to it. It is necessary to use a geometry management at the CTkTerminal textbox, just like any other CTk component.
 It provides a huge set of colors, beyond the classic ANSI codes supported natively by Python:
 
 ```txt
@@ -61,26 +85,46 @@ Color Documentation (ANSI Codes and Hexadecimal Values)
 50 - beige        - #F5F5DC
 ```
 
-You can pass your string (the line that is going to be added) and its formatting to your textbox using the function *addText*.
+You can pass your string (the line that is going to be added) and its formatting to your textbox using the method *addText*.
 You can either define the color and style via its parameters or using the ANSI characters.
-
-```py
-(method) def addText(
-    self: Self@CTkTerminal,
-    text: Any,
-    style: str = "auto",
-    color: str = "auto",
-    font: str = "Courier",
-    size: int = 12,
-    justify: str = "left"
-) -> None
-```
 
 For example, if you want to add a golden text formatted with bold and underline, you can use:
 ```py
-my_terminal = CTkTerminal()
+root = ctk.CTk()
+my_terminal = CTkTerminal(root)
+my_terminal.textbox.pack()
 my_terminal.addText('Check out my text!\n', color="gold", style="bold underline") # via parameters
 my_terminal.addText('\033[14;40mCheck out my text!\033[3;47m\nAnd now comes another one!') # via ANSI
+```
+
+## Class TerminalRedirector
+
+When initialized, it changes the value of sys.stdout to itself. In other words, the default prints will be formatted and redirected to your widget (preferably an instance of CTkTerminal).
+
+```py
+class TerminalRedirector(
+    self: Self@TerminalRedirector,
+    widget: CTkTerminal | CTkTextbox,
+    original_stdout: TextIO | Any = sys.stdout
+
+     # Prints in your widget
+    (method) def write(
+        self: Self@TerminalRedirector,
+        message: Any
+    ) -> None
+
+    # Returns outputs to the original terminal
+    (method) def deactivate(self: Self@TerminalRedirector) -> None
+) 
+```
+Example of use:
+```py
+widget = CTkTerminal(root)
+widget.textbox.pack()
+redirector = TerminalRedirector(widget)
+print("\033[14;40mMy terminal is so cool\033[m") # Printed inside your terminal/widget
+redirector.deactivate()
+print("\033[14;36mMeu terminal é muito legal\033[m") # Printed in the original terminal
 ```
 
 Result:
@@ -91,4 +135,11 @@ Result:
 ## 📦 Installation / Instalação
 
 ```bash
+# Install
 pip install git+https://github.com/gabrielTessarolo/ctkTerminal.git
+
+# Update
+pip install --update --force-reinstall git+https://github.com/gabrielTessarolo/ctkTerminal.git
+```
+
+- Developed by Gabriel Tessarolo Helmer
