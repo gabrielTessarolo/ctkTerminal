@@ -139,7 +139,7 @@ Result:
 pip install git+https://github.com/gabrielTessarolo/ctkTerminal.git
 
 # Update
-pip install --update --force-reinstall git+https://github.com/gabrielTessarolo/ctkTerminal.git
+pip install --upgrade --force-reinstall git+https://github.com/gabrielTessarolo/ctkTerminal.git
 ```
 
 - Developed by Gabriel Tessarolo Helmer
