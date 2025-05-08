@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import sys
 import re
+import threading
 
 class CTkTerminal:
     def __init__(self, root: ctk.CTk, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="white", bg_color="gray12"):
@@ -83,6 +84,8 @@ class CTkTerminal:
 
             try:
                 colorID = int(i[1].split(';')[-1])
+                if colorID >= 90 and colorID <= 110:
+                    colorID -= 60
             except:
                 colorID = None
             segFormat["color"] = self.colors[colorID]["name"] if colorID in self.colors.keys() else self.text_color
@@ -92,7 +95,7 @@ class CTkTerminal:
         return finalLine
 
     # Função para adicionar uma linha de texto formatada em ANSI ao terminal
-    def addText(self, text, font="Courier", size=12, style="auto", color="auto", justify="left"):
+    def addText(self, text, font="auto", size="auto", style="auto", color="auto", justify="left"):
         fontFormat = ctk.CTkFont()
 
         # Define fonte e tamanho customizados. Se der erro ou for igual, usa o padrão
@@ -150,22 +153,20 @@ class TerminalRedirector:
     def __init__(self, widget, original_stdout=sys.stdout, keepPrintingOriginal=False):
         self.terminal = widget
         self.original_stdout = original_stdout
-        self.keepPrintingOriginal = keepPrintingOriginal
+        self.lock = threading.Lock()
         sys.stdout = self
     
     # write específico para o CTkTerminal. Se não for uma instância, tenta escrever com insert
     def write(self, message):
-        if self.keepPrintingOriginal:
-            self.original.stdout.write(message+"\n")
-            
-        if isinstance(self.terminal, CTkTerminal):
-            self.terminal.addText(message, color="auto", style="auto")
-        else:
-            try:
-                self.terminal.insert("end", message)
-            except Exception as e:
-                # Print no stdout original se falhar
-                self.original_stdout.write(f"Error: {e}\n")
+        with self.lock:
+            if isinstance(self.terminal, CTkTerminal):
+                self.terminal.addText(message, color="auto", style="auto")
+            else:
+                try:
+                    self.terminal.insert("end", message)
+                except Exception as e:
+                    # Print no stdout original se falhar
+                    self.original_stdout.write(f"Error: {e}\n")
     
     # Volta o stdout do sistema para o original
     def deactivate(self):
