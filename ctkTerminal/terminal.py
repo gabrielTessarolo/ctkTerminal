@@ -153,11 +153,16 @@ class TerminalRedirector:
     def __init__(self, widget, original_stdout=sys.stdout, keepPrintingOriginal=False):
         self.terminal = widget
         self.original_stdout = original_stdout
+        self.keepPrintingOriginal = keepPrintingOriginal
         self.lock = threading.Lock()
+
         sys.stdout = self
     
     # write específico para o CTkTerminal. Se não for uma instância, tenta escrever com insert
     def write(self, message):
+        if self.keepPrintingOriginal:
+            self.original.stdout.write(message+"\n")
+
         with self.lock:
             if isinstance(self.terminal, CTkTerminal):
                 self.terminal.addText(message, color="auto", style="auto")
