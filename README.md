@@ -23,10 +23,6 @@ Its main purpose is to make it easy to insert to a custom CTkTextbox various col
 class CTkTerminal(
     self: Self@CTkTerminal,
     root:           ctk.Ctk,
-    line_span:      int = 5,
-    column_span:    int = 1,
-    width:          int = 100,
-    height:         int = 20,
     font:           str = "Courier",
     size:           int = 12,
     text_color:     str = "white",

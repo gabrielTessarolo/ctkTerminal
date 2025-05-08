@@ -4,13 +4,11 @@ import re
 import threading
 
 class CTkTerminal:
-    def __init__(self, root: ctk.CTk, line_span=5, column_span=1, width=100, height=20, font="Courier", size=12, text_color="white", bg_color="gray12"):
+    def __init__(self, root: ctk.CTk, font="Courier", size=12, text_color="white", bg_color="gray12"):
         self.master = root
-        self.textbox = ctk.CTkTextbox(self.master, width=width, height=height, text_color=text_color, fg_color=bg_color)
+        self.textbox = ctk.CTkTextbox(self.master, text_color=text_color, fg_color=bg_color)
         self.textbox.configure(state="disabled")
 
-        self.line_span = line_span
-        self.column_span = column_span
         self.font = font
         self.size = size
         self.text_color = text_color
@@ -161,7 +159,7 @@ class TerminalRedirector:
     # write específico para o CTkTerminal. Se não for uma instância, tenta escrever com insert
     def write(self, message):
         if self.keepPrintingOriginal:
-            self.original.stdout.write(message+"\n")
+            self.original_stdout.write(message+"\n")
 
         with self.lock:
             if isinstance(self.terminal, CTkTerminal):
