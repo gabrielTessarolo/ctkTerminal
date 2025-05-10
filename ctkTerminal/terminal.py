@@ -20,7 +20,7 @@ class CTkTerminal:
             31: {"name": "red",             "hex": "#FF0000"},
             32: {"name": "green",           "hex": "#00FF00"},
             33: {"name": "yellow",          "hex": "#FFFF00"},
-            34: {"name": "blue",            "hex": "#0000FF"},
+            34: {"name": "blue",            "hex": "#00BFFF"},
             35: {"name": "purple",          "hex": "#800080"},
             36: {"name": "cyan",            "hex": "#00FFFF"},
             37: {"name": "white",           "hex": "#FFFFFF"},
@@ -159,7 +159,7 @@ class TerminalRedirector:
     # write específico para o CTkTerminal. Se não for uma instância, tenta escrever com insert
     def write(self, message):
         if self.keepPrintingOriginal:
-            self.original_stdout.write(message+"\n")
+            self.original_stdout.write(message)
 
         with self.lock:
             if isinstance(self.terminal, CTkTerminal):
